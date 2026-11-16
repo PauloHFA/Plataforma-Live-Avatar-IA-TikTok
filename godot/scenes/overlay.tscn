@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/overlay_ui.gd" id="1_overlay"]
+
+[node name="OverlayUI" type="CanvasLayer"]
+script = ExtResource("1_overlay")
+
+[node name="TopBar" type="VBoxContainer" parent="."]
+offset_left = 36.0
+offset_top = 48.0
+offset_right = 1044.0
+offset_bottom = 180.0
+
+[node name="AIBadge" type="Label" parent="TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Avatar de IA (Em tempo real)"
+
+[node name="GoalLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Meta Espacial da Live: 0 / 5000"
+
+[node name="SidePanel" type="VBoxContainer" parent="."]
+offset_left = 36.0
+offset_top = 220.0
+offset_right = 460.0
+offset_bottom = 600.0
+
+[node name="TopDonorsLabel" type="Label" parent="SidePanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Top Doadores:"
+
+[node name="RecentGiftsLabel" type="Label" parent="SidePanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Últimos Presentes:"
+
+[node name="BottomCaption" type="PanelContainer" parent="."]
+offset_left = 48.0
+offset_top = 1580.0
+offset_right = 1032.0
+offset_bottom = 1820.0
+
+[node name="CaptionLabel" type="Label" parent="BottomCaption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Oiê tripulação! Aguardando o chat..."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

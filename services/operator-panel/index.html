@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Operador — Live IA TikTok</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --danger: #ef4444;
+      --ok: #10b981;
+      --warn: #f59e0b;
+    }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); padding: 20px;
+    }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .metric { font-size: 1.5rem; font-weight: 700; margin-top: 6px; }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    button {
+      border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer;
+      color: #fff; background: var(--accent); margin-right: 8px; margin-bottom: 8px;
+    }
+    button.danger { background: var(--danger); font-size: 1rem; padding: 12px 20px; }
+    button.ok { background: var(--ok); }
+    button.warn { background: var(--warn); color: #0f172a; }
+    input, select {
+      background: #0f172a; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 10px; margin-right: 8px;
+    }
+    .feed { max-height: 280px; overflow-y: auto; font-size: 0.9rem; }
+    .feed-item { border-bottom: 1px solid var(--border); padding: 6px 0; display: flex; justify-content: space-between; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge.ok { background: #064e3b; color: #6ee7b7; }
+    .badge.blk { background: #7f1d1d; color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 style="margin:0;">Live IA TikTok — Operação</h1>
+      <div class="muted" id="connLine">Conectando...</div>
+    </div>
+    <div>
+      <button class="danger" onclick="post('/api/kill-switch')">KILL SWITCH</button>
+      <button class="ok" onclick="post('/api/safe-mode/off')">Retomar Cena</button>
+      <button class="warn" onclick="post('/api/pause')">Pausar</button>
+      <button onclick="post('/api/resume')">Retomar</button>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card"><div class="muted">Estado do Avatar</div><div class="metric" id="stAvatar">-</div></div>
+    <div class="card"><div class="muted">Fila / Eventos</div><div class="metric" id="stQueue">-</div></div>
+    <div class="card"><div class="muted">Latência p50 / p95</div><div class="metric" id="stLatency">-</div></div>
+    <div class="card"><div class="muted">Godot FPS / Custo</div><div class="metric" id="stFpsCost">-</div></div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h3 style="margin-top:0;">Injetar Fala Manual</h3>
+      <input id="speechText" placeholder="Texto em pt-BR..." style="width:60%;" />
+      <select id="speechEmotion">
+        <option value="alegre">alegre</option>
+        <option value="surpresa">surpresa</option>
+        <option value="neutra">neutra</option>
+        <option value="timida">timida</option>
+      </select>
+      <button onclick="injectSpeech()">Falar Agora</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Termo Proibido & Humor</h3>
+      <input id="bannedTerm" placeholder="Novo termo proibido" />
+      <button onclick="addTerm()">Adicionar Termo</button>
+      <div style="margin-top:10px;">
+        <select id="sceneSelect">
+          <option value="studio_space">studio_space</option>
+          <option value="neon_arcade">neon_arcade</option>
+        </select>
+        <button onclick="setScene()">Trocar Cena</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0;">Feed de Eventos & Moderação</h3>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <script>
+    async function post(url, body) {
+      await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: body ? JSON.stringify(body) : '{}'
+      });
+      await refresh();
+    }
+    function injectSpeech() {
+      const text = document.getElementById('speechText').value.trim();
+      const emotion = document.getElementById('speechEmotion').value;
+      if (text) post('/api/inject-speech', {text, emotion});
+      document.getElementById('speechText').value = '';
+    }
+    function addTerm() {
+      const term = document.getElementById('bannedTerm').value.trim();
+      if (term) post('/api/banned-terms', {term});
+      document.getElementById('bannedTerm').value = '';
+    }
+    function setScene() {
+      const scene = document.getElementById('sceneSelect').value;
+      post('/api/mood-scene', {scene});
+    }
+    async function refresh() {
+      const [stRes, evRes] = await Promise.all([fetch('/api/status'), fetch('/api/events')]);
+      if (!stRes.ok) return;
+      const st = await stRes.json();
+      const ev = await evRes.json();
+      document.getElementById('stAvatar').textContent = st.safe_mode ? 'SAFE_MODE' : st.avatar_state;
+      document.getElementById('stQueue').textContent = `${st.metrics.queue_size} / ${st.metrics.total_events}`;
+      document.getElementById('stLatency').textContent = `${st.metrics.p50_latency_ms} / ${st.metrics.p95_latency_ms} ms`;
+      document.getElementById('stFpsCost').textContent = `${st.metrics.godot_fps} FPS | $${st.metrics.spent_usd}`;
+      document.getElementById('connLine').textContent =
+        `TikTok: ${st.connections.tiktok} | Godot: ${st.connections.godot_clients} | OBS: ${st.connections.obs} | Moedas: ${st.total_coins}`;
+      document.getElementById('feed').innerHTML = (ev.items || []).map(it =>
+        `<div class="feed-item"><span><b>${it.user}</b> (${it.type}): ${it.text}</span>` +
+        `<span class="badge ${it.allowed ? 'ok' : 'blk'}">${it.allowed ? 'OK' : it.note}</span></div>`
+      ).join('');
+    }
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
+</body>
+</html>

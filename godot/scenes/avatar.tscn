@@ -1,0 +1,65 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/avatar_controller.gd" id="1_avatar"]
+[ext_resource type="Script" path="res://scripts/lipsync.gd" id="2_lipsync"]
+[ext_resource type="Script" path="res://scripts/emotion_system.gd" id="3_emotion"]
+
+[node name="Avatar" type="Node2D"]
+position = Vector2(540, 1020)
+script = ExtResource("1_avatar")
+
+[node name="BodyRoot" type="Node2D" parent="."]
+
+[node name="Aura" type="ColorRect" parent="BodyRoot"]
+offset_left = -260.0
+offset_top = -360.0
+offset_right = 260.0
+offset_bottom = 360.0
+color = Color(0.55, 0.5, 0.95, 0.28)
+
+[node name="Torso" type="ColorRect" parent="BodyRoot"]
+offset_left = -150.0
+offset_top = 40.0
+offset_right = 150.0
+offset_bottom = 340.0
+color = Color(0.24, 0.27, 0.52, 1)
+
+[node name="Head" type="ColorRect" parent="BodyRoot"]
+offset_left = -140.0
+offset_top = -240.0
+offset_right = 140.0
+offset_bottom = 40.0
+color = Color(0.96, 0.85, 0.78, 1)
+
+[node name="LeftEye" type="ColorRect" parent="BodyRoot/Head"]
+offset_left = 55.0
+offset_top = 95.0
+offset_right = 95.0
+offset_bottom = 135.0
+pivot_offset = Vector2(20, 20)
+color = Color(0.15, 0.16, 0.25, 1)
+
+[node name="RightEye" type="ColorRect" parent="BodyRoot/Head"]
+offset_left = 185.0
+offset_top = 95.0
+offset_right = 225.0
+offset_bottom = 135.0
+pivot_offset = Vector2(20, 20)
+color = Color(0.15, 0.16, 0.25, 1)
+
+[node name="Mouth" type="ColorRect" parent="BodyRoot/Head"]
+offset_left = 105.0
+offset_top = 200.0
+offset_right = 175.0
+offset_bottom = 224.0
+pivot_offset = Vector2(35, 12)
+color = Color(0.75, 0.25, 0.35, 1)
+
+[node name="VoicePlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Voice"
+
+[node name="LipSync" type="Node" parent="."]
+script = ExtResource("2_lipsync")
+
+[node name="EmotionSystem" type="Node" parent="."]
+script = ExtResource("3_emotion")

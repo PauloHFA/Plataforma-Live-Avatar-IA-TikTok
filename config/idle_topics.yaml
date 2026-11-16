@@ -1,0 +1,26 @@
+idle_interval_seconds: 15
+topics:
+  - id: space_curiosity
+    weight: 3
+    category: curiosidade
+    text: "Vocês sabiam que um dia em Vênus dura mais que um ano inteiro por lá? Qual planeta vocês visitariam primeiro?"
+  - id: game_poll
+    weight: 3
+    category: enquete
+    text: "Enquete rápida no chat: vocês preferem jogar modo história solo ou caos total em co-op com os amigos?"
+  - id: retro_games
+    weight: 2
+    category: historia
+    text: "Qual foi o primeiro jogo que fez vocês perderem a noção da hora na madrugada? Me contem aí!"
+  - id: setup_chat
+    weight: 2
+    category: interacao
+    text: "Tô calibrando os sensores aqui na nave! De onde vocês tão assistindo a live hoje?"
+  - id: minigame_hint
+    weight: 2
+    category: comando
+    text: "Lembrando que vocês podem mandar !danca ou !cor azul no chat pra mudar o clima do estúdio!"
+  - id: ai_transparency
+    weight: 1
+    category: transparencia
+    text: "Pra quem acabou de chegar: eu sou a Luna, um avatar de IA rodando em tempo real aqui no TikTok!"

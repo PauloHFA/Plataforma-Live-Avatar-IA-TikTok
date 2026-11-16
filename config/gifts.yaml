@@ -1,0 +1,73 @@
+tiers:
+  - id: T1
+    name: Pequeno
+    min_coins: 1
+    max_coins: 9
+    fx: particles_light
+    sound: chime_short
+    gesture: wave
+    emotion: alegre
+    interrupt: false
+    use_llm: false
+    cache_template: "Valeu pelo presente {gift}, {user}!"
+  - id: T2
+    name: Medio
+    min_coins: 10
+    max_coins: 99
+    fx: rainbow_burst
+    sound: sparkle_up
+    gesture: mini_dance
+    emotion: alegre
+    interrupt: false
+    use_llm: true
+    top_donor: true
+  - id: T3
+    name: Grande
+    min_coins: 100
+    max_coins: 999
+    fx: screen_flash_zoom
+    sound: fanfare_mid
+    gesture: special_pose
+    emotion: surpresa
+    interrupt: false
+    use_llm: true
+    overlay_highlight_seconds: 20
+    top_donor: true
+  - id: T4
+    name: Epico
+    min_coins: 1000
+    max_coins: 9999
+    fx: epic_scene_swap
+    sound: celebration_music
+    gesture: celebrate_long
+    emotion: surpresa
+    interrupt: true
+    use_llm: true
+    hall_of_live: true
+    top_donor: true
+  - id: T5
+    name: Lendario
+    min_coins: 10000
+    max_coins: 9999999
+    fx: cinematic_legendary
+    sound: orchestra_hit
+    gesture: bow_legendary
+    emotion: surpresa
+    interrupt: true
+    use_llm: true
+    alert_operator: true
+    hall_of_live: true
+    top_donor: true
+
+combo_steps: [5, 10, 50, 100]
+live_goal:
+  title: "Meta Espacial da Live"
+  target_coins: 5000
+  reward_fx: confetti_supernova
+custom_gifts:
+  Rose:
+    fx: rose_petals
+    gesture: heart
+  Lion:
+    fx: lion_roar_epic
+    gesture: roar_celebrate

@@ -1,0 +1,10 @@
+# Termos proibidos (uma entrada por linha, case-insensitive)
+palavrao_exemplo
+compre seguidores
+pix garantido
+urubu do pix
+aposte agora
+cassino ilegal
+whatsapp.com
+t.me/
+bit.ly/

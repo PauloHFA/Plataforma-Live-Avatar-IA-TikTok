@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/safe_mode.gd" id="1_safe"]
+
+[node name="SafeModeUI" type="CanvasLayer"]
+visible = false
+layer = 10
+script = ExtResource("1_safe")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.07, 0.14, 0.96)
+
+[node name="Panel" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Message" type="Label" parent="Panel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "Já voltamos!"
+horizontal_alignment = 1
