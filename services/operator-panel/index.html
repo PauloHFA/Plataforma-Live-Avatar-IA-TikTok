@@ -50,10 +50,12 @@
       <div class="muted" id="connLine">Conectando...</div>
     </div>
     <div>
+      <input id="opToken" type="password" placeholder="Token operador (opcional)" style="width:190px;" onchange="saveToken()" />
       <button class="danger" onclick="post('/api/kill-switch')">KILL SWITCH</button>
       <button class="ok" onclick="post('/api/safe-mode/off')">Retomar Cena</button>
       <button class="warn" onclick="post('/api/pause')">Pausar</button>
       <button onclick="post('/api/resume')">Retomar</button>
+      <button class="warn" onclick="post('/api/veto/current')">Vetar Fala</button>
     </div>
   </header>
 
@@ -77,15 +79,22 @@
       <button onclick="injectSpeech()">Falar Agora</button>
     </div>
     <div class="card">
-      <h3 style="margin-top:0;">Termo Proibido & Humor</h3>
+      <h3 style="margin-top:0;">Termo Proibido, Humor &amp; Cena</h3>
       <input id="bannedTerm" placeholder="Novo termo proibido" />
       <button onclick="addTerm()">Adicionar Termo</button>
       <div style="margin-top:10px;">
+        <select id="moodSelect">
+          <option value="alegre">Humor: alegre</option>
+          <option value="surpresa">Humor: surpresa</option>
+          <option value="timida">Humor: timida</option>
+          <option value="neutra">Humor: neutra</option>
+          <option value="brava">Humor: brava</option>
+        </select>
         <select id="sceneSelect">
           <option value="studio_space">studio_space</option>
           <option value="neon_arcade">neon_arcade</option>
         </select>
-        <button onclick="setScene()">Trocar Cena</button>
+        <button onclick="setMoodScene()">Aplicar</button>
       </div>
     </div>
   </section>
@@ -96,10 +105,17 @@
   </section>
 
   <script>
+    const tokenInput = document.getElementById('opToken');
+    tokenInput.value = sessionStorage.getItem('op_token') || '';
+    function saveToken() { sessionStorage.setItem('op_token', tokenInput.value.trim()); }
+    function authHeaders(extra = {}) {
+      const tok = tokenInput.value.trim();
+      return tok ? { ...extra, 'Authorization': `Bearer ${tok}` } : extra;
+    }
     async function post(url, body) {
       await fetch(url, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: authHeaders({'Content-Type': 'application/json'}),
         body: body ? JSON.stringify(body) : '{}'
       });
       await refresh();
@@ -115,24 +131,39 @@
       if (term) post('/api/banned-terms', {term});
       document.getElementById('bannedTerm').value = '';
     }
-    function setScene() {
+    function setMoodScene() {
+      const mood = document.getElementById('moodSelect').value;
       const scene = document.getElementById('sceneSelect').value;
-      post('/api/mood-scene', {scene});
+      post('/api/mood-scene', {mood, scene});
+    }
+    function banUser(userId, nick) {
+      post('/api/ban', {user_id: userId, nick});
+    }
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
     async function refresh() {
-      const [stRes, evRes] = await Promise.all([fetch('/api/status'), fetch('/api/events')]);
-      if (!stRes.ok) return;
+      const opts = { headers: authHeaders() };
+      const [stRes, evRes] = await Promise.all([fetch('/api/status', opts), fetch('/api/events', opts)]);
+      if (!stRes.ok) {
+        document.getElementById('connLine').textContent = `Acesso aguardando token (${stRes.status})`;
+        return;
+      }
       const st = await stRes.json();
       const ev = await evRes.json();
-      document.getElementById('stAvatar').textContent = st.safe_mode ? 'SAFE_MODE' : st.avatar_state;
+      const modeFlags = [st.safe_mode ? 'SAFE_MODE' : st.avatar_state];
+      if (st.slow_mode) modeFlags.push('SLOW');
+      if (st.economy_mode) modeFlags.push('ECON');
+      document.getElementById('stAvatar').textContent = modeFlags.join(' | ');
       document.getElementById('stQueue').textContent = `${st.metrics.queue_size} / ${st.metrics.total_events}`;
       document.getElementById('stLatency').textContent = `${st.metrics.p50_latency_ms} / ${st.metrics.p95_latency_ms} ms`;
       document.getElementById('stFpsCost').textContent = `${st.metrics.godot_fps} FPS | $${st.metrics.spent_usd}`;
       document.getElementById('connLine').textContent =
         `TikTok: ${st.connections.tiktok} | Godot: ${st.connections.godot_clients} | OBS: ${st.connections.obs} | Moedas: ${st.total_coins}`;
       document.getElementById('feed').innerHTML = (ev.items || []).map(it =>
-        `<div class="feed-item"><span><b>${it.user}</b> (${it.type}): ${it.text}</span>` +
-        `<span class="badge ${it.allowed ? 'ok' : 'blk'}">${it.allowed ? 'OK' : it.note}</span></div>`
+        `<div class="feed-item"><span><b>${esc(it.user)}</b> (${esc(it.type)}): ${esc(it.text)}</span>` +
+        `<span><span class="badge ${it.allowed ? 'ok' : 'blk'}">${it.allowed ? 'OK' : esc(it.note)}</span>` +
+        `<button style="padding:3px 8px;font-size:0.75rem;margin-left:8px;background:#991b1b;" onclick="banUser('${esc(it.user_id)}','${esc(it.user)}')">Banir</button></span></div>`
       ).join('');
     }
     refresh();

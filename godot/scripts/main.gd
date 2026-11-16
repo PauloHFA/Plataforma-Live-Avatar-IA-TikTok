@@ -29,6 +29,8 @@ func _on_command_received(cmd: Dictionary) -> void:
 			var on := bool(cmd.get("on", false))
 			avatar.set_safe_mode(on)
 			safe_mode_ui.set_active(on, String(cmd.get("reason", "")))
+		"stop_speech":
+			avatar.stop_all()
 		"scene":
 			scene_director.apply_scene_command(cmd)
 

@@ -1,10 +1,12 @@
-"""Métricas de latência, erros, FPS, custo e geração de alertas (Seção 12.2)."""
+"""Métricas de latência, erros, FPS, custo e envio de alertas (Seção 12.2)."""
 
 from __future__ import annotations
 
 import logging
 from collections import deque
 from dataclasses import dataclass, field
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -125,3 +127,25 @@ class MetricsRegistry:
             f"live_spent_usd {spent_usd:.6f}",
         ]
         return "\n".join(lines) + "\n"
+
+
+class AlertDispatcher:
+    """Envia alertas operacionais por webhook (Discord / Slack / endpoint genérico)."""
+
+    def __init__(self, webhook_url: str = "", *, timeout_seconds: float = 3.0) -> None:
+        self.webhook_url = webhook_url.strip()
+        self.timeout_seconds = timeout_seconds
+
+    async def send(self, message: str) -> bool:
+        if not self.webhook_url:
+            return False
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                resp = await client.post(
+                    self.webhook_url,
+                    json={"content": f"[Live IA TikTok] {message}", "text": message},
+                )
+                return 200 <= resp.status_code < 300
+        except Exception as exc:
+            logger.warning("Falha ao enviar alerta para webhook: %s", exc)
+            return False

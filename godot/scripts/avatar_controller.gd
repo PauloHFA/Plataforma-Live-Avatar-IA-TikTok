@@ -70,6 +70,8 @@ func _lookup_viseme(t: float) -> String:
 func speak_command(cmd: Dictionary) -> void:
 	if current_state == State.SAFE_MODE:
 		return
+	if current_state == State.SPEAKING and not bool(cmd.get("interruptible", true)):
+		stop_all()
 	_current_id = String(cmd.get("id", ""))
 	_viseme_frames = cmd.get("visemes", [])
 	_speech_elapsed = 0.0

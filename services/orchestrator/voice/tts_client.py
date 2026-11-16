@@ -134,6 +134,21 @@ class VoiceService:
         path = self.cache.put(self.voice, self._fallback_text, wav_bytes, visemes)
         return path, visemes
 
+    async def prewarm_phrases(
+        self, phrases: list[str], *, emotion: Emotion = Emotion.ALEGRE
+    ) -> int:
+        """Pré-aquece saudações e falas de contingência no startup."""
+        self._ensure_fallback_audio()
+        warmed = 0
+        for phrase in phrases:
+            cleaned = phrase.strip()
+            if not cleaned:
+                continue
+            if self.cache.get(self.voice, cleaned) is None:
+                await self.synthesize_speech(cleaned, emotion=emotion)
+                warmed += 1
+        return warmed
+
     async def synthesize_speech(self, text: str, emotion: Emotion = Emotion.NEUTRA) -> TTSResult:
         loop = asyncio.get_running_loop()
         started = loop.time()

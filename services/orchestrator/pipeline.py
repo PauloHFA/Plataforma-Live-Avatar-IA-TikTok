@@ -22,6 +22,7 @@ from services.models import (
     SafeModeCommand,
     SceneCommand,
     SpeakCommand,
+    StopSpeechCommand,
     new_event_id,
 )
 from services.orchestrator.brain.llm_client import (
@@ -38,7 +39,7 @@ from services.orchestrator.config import (
     load_persona_profile,
 )
 from services.orchestrator.gifts import GiftReactionEngine
-from services.orchestrator.metrics import MetricsRegistry
+from services.orchestrator.metrics import AlertDispatcher, MetricsRegistry
 from services.orchestrator.minigames import ChatMinigameEngine
 from services.orchestrator.moderation.classifier import ModerationPipeline
 from services.orchestrator.obs_control import OBSController
@@ -120,6 +121,7 @@ class OrchestratorService:
             contingency_scene=settings.obs_contingency_scene,
         )
         self.metrics = MetricsRegistry()
+        self.alert_dispatcher = AlertDispatcher(settings.alert_webhook_url)
 
         self.live_feed: deque[dict[str, Any]] = deque(maxlen=100)
         self.vetoed_utterances: set[str] = set()
@@ -127,6 +129,9 @@ class OrchestratorService:
         self._running = False
         self._tasks: list[asyncio.Task[None]] = []
         self._speech_lock = asyncio.Lock()
+        self._speech_done_event = asyncio.Event()
+        self._speech_done_event.set()
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     def _build_llm_client(self) -> LLMClient:
         if self.settings.llm_api_key and self.settings.llm_api_key != "[REDACTED]":
@@ -152,6 +157,10 @@ class OrchestratorService:
         await self.audit.initialize()
         await self.audit.purge_expired(self.settings.retention_days)
         await self.audit.start_session(self.session_id)
+
+        await self.voice.prewarm_phrases(
+            [*self.persona.greetings_cache, *self.persona.fallback_lines]
+        )
 
         self.ws_server.on_message(self._on_godot_message)
         if start_ws:
@@ -192,8 +201,18 @@ class OrchestratorService:
         )
         await self.audit.close()
 
-    async def _on_source_alert(self, msg: str) -> None:
+    def _notify_alert(self, msg: str) -> None:
         self.metrics.push_alert(msg)
+        if self.alert_dispatcher.webhook_url:
+            try:
+                task = asyncio.create_task(self.alert_dispatcher.send(msg))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+            except RuntimeError:
+                pass
+
+    async def _on_source_alert(self, msg: str) -> None:
+        self._notify_alert(msg)
 
     async def _on_godot_message(self, msg: GodotInboundMessage) -> None:
         if msg.type == "heartbeat":
@@ -208,12 +227,20 @@ class OrchestratorService:
             ):
                 self.state_machine.current_utterance_id = None
                 self.state_machine.transition(AvatarState.IDLE)
+                self._speech_done_event.set()
         elif msg.type == "error":
-            self.metrics.push_alert(f"Erro Godot ({msg.code}): {msg.context}")
+            self._notify_alert(f"Erro Godot ({msg.code}): {msg.context}")
 
     async def ingest_event(self, event: NormalizedEvent) -> None:
         """Ponto único de entrada de eventos normalizados (usado pela LiveSource e testes)."""
         self.metrics.total_events += 1
+        self.queue.record_arrival()
+        changed, rate = self.queue.evaluate_raid_protection()
+        if changed:
+            if self.queue.slow_mode:
+                self._notify_alert(f"Modo slow ativado automaticamente ({rate:.1f} eventos/s)")
+            else:
+                self._notify_alert(f"Modo slow desativado ({rate:.1f} eventos/s)")
         if event.type == EventType.VIEWER_COUNT and event.payload.viewer_count is not None:
             self.peak_viewers = max(self.peak_viewers, event.payload.viewer_count)
             await self.audit.log_event(event, "viewer_count")
@@ -500,9 +527,19 @@ class OrchestratorService:
         if self.state_machine.safe_mode or self.state_machine.paused:
             return
 
+        # Aguarda fala anterior terminar, a menos que este comando interrompa (ex: T4/T5)
+        if not interruptible and self.state_machine.current_utterance_id is not None:
+            await self.ws_server.broadcast(StopSpeechCommand(reason="urgent_gift_interrupt"))
+            self._speech_done_event.set()
+        elif self.ws_server.client_count > 0 and not self._speech_done_event.is_set():
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(self._speech_done_event.wait(), timeout=8.0)
+
         async with self._speech_lock:
             self.state_machine.current_utterance_id = utterance_id
             self.state_machine.transition(AvatarState.SPEAKING)
+            if self.ws_server.client_count > 0:
+                self._speech_done_event.clear()
             cmd = SpeakCommand(
                 id=utterance_id,
                 priority=priority,
@@ -568,9 +605,19 @@ class OrchestratorService:
     async def activate_kill_switch(self, reason: str = "operator_kill_switch") -> None:
         self.state_machine.engage_kill_switch()
         self.queue.clear_pending_speech_items()
+        self._speech_done_event.set()
         await self.ws_server.broadcast(SafeModeCommand(on=True, reason=reason))
         self.obs.switch_to_contingency()
-        self.metrics.push_alert(f"Kill switch ativado: {reason}")
+        self._notify_alert(f"Kill switch ativado: {reason}")
+
+    async def veto_utterance(self, utterance_id: str) -> int:
+        self.vetoed_utterances.add(utterance_id)
+        cleared = self.queue.clear_pending_speech_items()
+        if utterance_id == "current" or utterance_id == self.state_machine.current_utterance_id:
+            self.state_machine.current_utterance_id = None
+            self._speech_done_event.set()
+            await self.ws_server.broadcast(StopSpeechCommand(reason="operator_veto"))
+        return cleared
 
     async def resume_from_safe_mode(self) -> None:
         self.state_machine.disengage_kill_switch()

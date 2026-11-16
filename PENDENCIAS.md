@@ -13,6 +13,12 @@
   - TTS & Visemes (`MockSineTTSClient`, `AzureSpeechTTSClient`, `AudioCache`, fallback WAV).
   - Matriz de presentes T1–T5, minijogos (`!danca`, `!cor`, `!votar`), máquina de estados, controle de orçamento diário (`80%` alerta / `100%` modo econômico), métricas Prometheus (`/metrics`) e persistência SQLite com retenção/exclusão LGPD.
   - API FastAPI + Painel do Operador (`services/operator-panel/index.html`) com autenticação opcional por bearer token (`OPERATOR_TOKEN`).
+- **Painel & Webhook de alertas:**
+  - `AlertDispatcher` assíncrono para webhook (`ALERT_WEBHOOK_URL`) com cobertura para alertas críticos.
+  - Painel web com entrada de token (`Authorization: Bearer`), indicador `SLOW` / `ECON`, seletor de humor/cena, botão `Vetar Fala` e ação rápida `Banir` no feed.
+- **Sincronização de fala & proteção anti-raid:**
+  - `StopSpeechCommand` + espera sincronizada por `speech_finished` e interrupção em presentes urgentes (`T4/T5`) ou veto.
+  - Detecção automática de rajada (`evaluate_raid_protection` com ativação/desativação de `slow_mode`) e pré-aquecimento de cache TTS (`prewarm_phrases`) no startup.
 - **Cliente Godot 4.x (`godot/`):**
   - Projeto `1080x1920`, layout de áudio `Voice` (`SpectrumAnalyzer`), WebSocket client, lip-sync híbrido (visemes + amplitude), emoções, `GiftFX`, `OverlayUI` (`Avatar de IA`) e `SafeMode`.
   - Validado via Godot 4.7.2 `--headless --quit` sem erros de parse ou cena.
@@ -24,8 +30,7 @@
 ## 2. Melhorias Opcionais Futuras
 
 - Substituir o avatar procedural 2D em `godot/scenes/avatar.tscn` por modelo 3D `.vrm`/`.gltf` com `AnimationTree` e blendshapes completos ou Live2D (`GDCubism`).
-- Adicionar suporte nativo a ElevenLabs / Piper / Coqui XTTS local em `services/orchestrator/voice/` e testes automatizados GUT dentro de `godot/`.
-- Integrar envio automático de alertas para webhook Discord/Telegram quando `ALERT_WEBHOOK_URL` estiver preenchido.
+- Adicionar suporte nativo a ElevenLabs / Piper / Coqui XTTS local em `services/orchestrator/voice/`, streaming SSE no LLM e testes GUT dentro de `godot/`.
 
 ---
 

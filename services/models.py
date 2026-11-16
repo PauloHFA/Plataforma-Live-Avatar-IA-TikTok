@@ -161,6 +161,13 @@ class SafeModeCommand(BaseModel):
     reason: str | None = None
 
 
+class StopSpeechCommand(BaseModel):
+    """Comando para interromper imediatamente a fala atual na Godot."""
+
+    cmd: Literal["stop_speech"] = "stop_speech"
+    reason: str = "interrupted"
+
+
 class SceneCommand(BaseModel):
     """Comando extra de cena/iluminação/cor/minijogo."""
 

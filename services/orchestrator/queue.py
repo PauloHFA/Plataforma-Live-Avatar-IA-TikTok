@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import itertools
 import time
+from collections import deque
 from dataclasses import dataclass, field
 
 from services.models import EventType, NormalizedEvent, PriorityLevel
@@ -45,9 +46,41 @@ class EventPriorityQueue:
         self._last_p3_flush = time.monotonic()
         self._like_total = 0
         self.slow_mode = False
+        self._arrival_timestamps: deque[float] = deque(maxlen=2000)
 
         self.dropped_count = 0
         self.dedup_dropped_count = 0
+
+    def record_arrival(self, now: float | None = None) -> float:
+        """Registra chegada e retorna taxa atual em eventos/s na janela de 5s."""
+        now_ts = time.monotonic() if now is None else now
+        self._arrival_timestamps.append(now_ts)
+        cutoff = now_ts - 5.0
+        while self._arrival_timestamps and self._arrival_timestamps[0] < cutoff:
+            self._arrival_timestamps.popleft()
+        return len(self._arrival_timestamps) / 5.0
+
+    def evaluate_raid_protection(
+        self,
+        *,
+        high_rate_threshold: float = 25.0,
+        low_rate_threshold: float = 10.0,
+        now: float | None = None,
+    ) -> tuple[bool, float]:
+        """Ativa/desativa slow_mode automaticamente; retorna (alterou, taxa_atual)."""
+        now_ts = time.monotonic() if now is None else now
+        cutoff = now_ts - 5.0
+        while self._arrival_timestamps and self._arrival_timestamps[0] < cutoff:
+            self._arrival_timestamps.popleft()
+        rate = len(self._arrival_timestamps) / 5.0
+
+        if not self.slow_mode and rate >= high_rate_threshold:
+            self.slow_mode = True
+            return True, rate
+        if self.slow_mode and rate <= low_rate_threshold:
+            self.slow_mode = False
+            return True, rate
+        return False, rate
 
     def classify_priority(self, event: NormalizedEvent) -> PriorityLevel:
         if event.type in (EventType.OPERATOR, EventType.SYSTEM):

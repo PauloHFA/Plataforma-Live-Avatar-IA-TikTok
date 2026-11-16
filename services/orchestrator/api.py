@@ -77,6 +77,8 @@ def create_operator_app(orchestrator: OrchestratorService) -> FastAPI:
             "paused": sm.paused,
             "safe_mode": sm.safe_mode,
             "economy_mode": sm.economy_mode,
+            "slow_mode": orchestrator.queue.slow_mode,
+            "current_utterance_id": sm.current_utterance_id,
             "mood": sm.mood.value,
             "scene": sm.scene,
             "connections": {
@@ -148,8 +150,7 @@ def create_operator_app(orchestrator: OrchestratorService) -> FastAPI:
 
     @app.post("/api/veto/{utterance_id}", dependencies=[Depends(require_operator_auth)])
     async def veto_utterance(utterance_id: str) -> dict[str, Any]:
-        orchestrator.vetoed_utterances.add(utterance_id)
-        cleared = orchestrator.queue.clear_pending_speech_items()
+        cleared = await orchestrator.veto_utterance(utterance_id)
         return {"vetoed": utterance_id, "cleared_queue": cleared}
 
     @app.post("/api/simulate/chat", dependencies=[Depends(require_operator_auth)])
