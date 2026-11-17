@@ -23,6 +23,7 @@ func _on_command_received(cmd: Dictionary) -> void:
 			avatar.speak_command(cmd)
 		"gift_fx":
 			gift_fx.trigger(cmd)
+			avatar.react_to_gift(int(cmd.get("tier", 1)))
 		"overlay":
 			overlay_ui.handle_overlay_command(cmd)
 		"safe_mode":
@@ -33,6 +34,9 @@ func _on_command_received(cmd: Dictionary) -> void:
 			avatar.stop_all()
 		"scene":
 			scene_director.apply_scene_command(cmd)
+			var scene_action := String(cmd.get("action", ""))
+			if scene_action != "":
+				avatar.trigger_gesture(scene_action, 3.2, 1.1)
 
 
 func _on_speech_started(utterance_id: String) -> void:

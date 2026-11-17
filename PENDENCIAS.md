@@ -21,7 +21,7 @@
   - Detecção automática de rajada (`evaluate_raid_protection` com ativação/desativação de `slow_mode`) e pré-aquecimento de cache TTS (`prewarm_phrases`) no startup.
 - **Cliente Godot 4.x (`godot/`):**
   - Projeto `1080x1920`, layout de áudio `Voice` (`SpectrumAnalyzer`), WebSocket client, lip-sync híbrido (visemes + amplitude), emoções, `GiftFX`, `OverlayUI` (`Avatar de IA`) e `SafeMode`.
-  - **Avatar 2D por camadas (`godot/assets/avatar/`, `scenes/avatar.tscn`):** suporte a sprites em camadas (`back_hair`, `body`, `head`, `eyes_open`/`closed`/`happy` e `mouth_sil`/`aa`/`ee`/`ih`/`oh`/`ou`) com movimento suave de respiração/inclinação da cabeça, piscada natural por troca de sprite, lip-sync por visemes/amplitude e fallback automático para o rig geométrico (`FallbackRig`).
+  - **Avatar 2D por camadas (`godot/assets/avatar/`, `scenes/avatar.tscn`):** suporte a sprites em camadas (`back_hair`, `body`, `head`, `eyes_open`/`closed`/`happy`/`surprised`/`angry` e `mouth_sil`/`aa`/`ee`/`ih`/`oh`/`ou`) com movimento de respiração/inclinação da cabeça, piscada por troca de sprite, gestos animados (`dance`, `celebrate`, `wave`, `bow`), reação física proporcional ao tier em `gift_fx` (`react_to_gift`), lip-sync por visemes/amplitude e fallback automático para o rig geométrico (`FallbackRig`).
   - Validado via Godot 4.7.2 `--headless --quit` sem erros de parse ou cena.
 - **Testes automatizados (`tests/`):**
   - Suíte unitária, integração (WebSocket real, FastAPI, 1.000 presentes, timeout fallback, kill switch), adversarial (240+ casos de injeção/spam/PII/toxicidade) e carga (500 eventos em rajada).

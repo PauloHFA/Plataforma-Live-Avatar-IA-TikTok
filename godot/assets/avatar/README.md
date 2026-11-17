@@ -7,9 +7,11 @@ Para substituir a arte inicial do avatar sem alterar código, substitua os PNGs 
 | `back_hair.png` | Cabelo traseiro (atrás do tronco e pescoço) | Opcional |
 | `body.png` | Tronco, ombros e pescoço | Sim (fallback geométrico se ausente) |
 | `head.png` | Rosto e cabelo frontal | Sim (fallback geométrico se ausente) |
-| `eyes_open.png` | Olhos abertos | Sim para sprites |
+| `eyes_open.png` | Olhos abertos (neutro) | Sim para sprites |
 | `eyes_closed.png` | Olhos fechados (piscada automática) | Opcional |
 | `eyes_happy.png` | Expressão feliz (`happy`) | Opcional |
+| `eyes_surprised.png` | Expressão surpresa (`surprised`) | Opcional |
+| `eyes_angry.png` | Expressão brava (`angry`) | Opcional |
 | `mouth_sil.png` | Boca em repouso / `PP` | Sim para sprites |
 | `mouth_aa.png` | Viseme `aa` | Opcional |
 | `mouth_ee.png` | Viseme `E` | Opcional |

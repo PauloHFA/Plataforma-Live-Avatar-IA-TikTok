@@ -17,5 +17,7 @@ func apply_emotion(emotion_name: String) -> void:
 		aura.color = EMOTION_COLORS.get(emotion_name, EMOTION_COLORS["neutral"])
 	var controller := get_parent()
 	if controller != null and controller.has_method("set_eye_expression"):
-		var eye_expr := "happy" if emotion_name == "happy" else "open"
+		var eye_expr := "open"
+		if emotion_name in ["happy", "surprised", "angry"]:
+			eye_expr = emotion_name
 		controller.set_eye_expression(eye_expr)
