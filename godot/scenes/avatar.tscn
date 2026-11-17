@@ -17,21 +17,39 @@ offset_right = 260.0
 offset_bottom = 360.0
 color = Color(0.55, 0.5, 0.95, 0.28)
 
-[node name="Torso" type="ColorRect" parent="BodyRoot"]
+[node name="SpriteRig" type="Node2D" parent="BodyRoot"]
+visible = false
+scale = Vector2(1.15, 1.15)
+
+[node name="BackHairSprite" type="Sprite2D" parent="BodyRoot/SpriteRig"]
+
+[node name="BodySprite" type="Sprite2D" parent="BodyRoot/SpriteRig"]
+
+[node name="HeadPivot" type="Node2D" parent="BodyRoot/SpriteRig"]
+
+[node name="HeadSprite" type="Sprite2D" parent="BodyRoot/SpriteRig/HeadPivot"]
+
+[node name="EyesSprite" type="Sprite2D" parent="BodyRoot/SpriteRig/HeadPivot"]
+
+[node name="MouthSprite" type="Sprite2D" parent="BodyRoot/SpriteRig/HeadPivot"]
+
+[node name="FallbackRig" type="Node2D" parent="BodyRoot"]
+
+[node name="Torso" type="ColorRect" parent="BodyRoot/FallbackRig"]
 offset_left = -150.0
 offset_top = 40.0
 offset_right = 150.0
 offset_bottom = 340.0
 color = Color(0.24, 0.27, 0.52, 1)
 
-[node name="Head" type="ColorRect" parent="BodyRoot"]
+[node name="Head" type="ColorRect" parent="BodyRoot/FallbackRig"]
 offset_left = -140.0
 offset_top = -240.0
 offset_right = 140.0
 offset_bottom = 40.0
 color = Color(0.96, 0.85, 0.78, 1)
 
-[node name="LeftEye" type="ColorRect" parent="BodyRoot/Head"]
+[node name="LeftEye" type="ColorRect" parent="BodyRoot/FallbackRig/Head"]
 offset_left = 55.0
 offset_top = 95.0
 offset_right = 95.0
@@ -39,7 +57,7 @@ offset_bottom = 135.0
 pivot_offset = Vector2(20, 20)
 color = Color(0.15, 0.16, 0.25, 1)
 
-[node name="RightEye" type="ColorRect" parent="BodyRoot/Head"]
+[node name="RightEye" type="ColorRect" parent="BodyRoot/FallbackRig/Head"]
 offset_left = 185.0
 offset_top = 95.0
 offset_right = 225.0
@@ -47,7 +65,7 @@ offset_bottom = 135.0
 pivot_offset = Vector2(20, 20)
 color = Color(0.15, 0.16, 0.25, 1)
 
-[node name="Mouth" type="ColorRect" parent="BodyRoot/Head"]
+[node name="Mouth" type="ColorRect" parent="BodyRoot/FallbackRig/Head"]
 offset_left = 105.0
 offset_top = 200.0
 offset_right = 175.0

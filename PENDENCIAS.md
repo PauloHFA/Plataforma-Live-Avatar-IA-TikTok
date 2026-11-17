@@ -21,6 +21,7 @@
   - Detecção automática de rajada (`evaluate_raid_protection` com ativação/desativação de `slow_mode`) e pré-aquecimento de cache TTS (`prewarm_phrases`) no startup.
 - **Cliente Godot 4.x (`godot/`):**
   - Projeto `1080x1920`, layout de áudio `Voice` (`SpectrumAnalyzer`), WebSocket client, lip-sync híbrido (visemes + amplitude), emoções, `GiftFX`, `OverlayUI` (`Avatar de IA`) e `SafeMode`.
+  - **Avatar 2D por camadas (`godot/assets/avatar/`, `scenes/avatar.tscn`):** suporte a sprites em camadas (`back_hair`, `body`, `head`, `eyes_open`/`closed`/`happy` e `mouth_sil`/`aa`/`ee`/`ih`/`oh`/`ou`) com movimento suave de respiração/inclinação da cabeça, piscada natural por troca de sprite, lip-sync por visemes/amplitude e fallback automático para o rig geométrico (`FallbackRig`).
   - Validado via Godot 4.7.2 `--headless --quit` sem erros de parse ou cena.
 - **Testes automatizados (`tests/`):**
   - Suíte unitária, integração (WebSocket real, FastAPI, 1.000 presentes, timeout fallback, kill switch), adversarial (240+ casos de injeção/spam/PII/toxicidade) e carga (500 eventos em rajada).
@@ -29,7 +30,7 @@
 
 ## 2. Melhorias Opcionais Futuras
 
-- Substituir o avatar procedural 2D em `godot/scenes/avatar.tscn` por modelo 3D `.vrm`/`.gltf` com `AnimationTree` e blendshapes completos ou Live2D (`GDCubism`).
+- Evoluir futuramente o avatar 2D em camadas (`godot/assets/avatar/`) com arte customizada final, Live2D (`GDCubism`) ou modelo 3D `.vrm`/`.gltf`.
 - Adicionar suporte nativo a ElevenLabs / Piper / Coqui XTTS local em `services/orchestrator/voice/`, streaming SSE no LLM e testes GUT dentro de `godot/`.
 
 ---
